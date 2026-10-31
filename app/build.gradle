@@ -42,3 +42,8 @@ application {
     // Define the main class for the application.
     mainClass = 'org.example.App'
 }
+
+tasks.named('run', JavaExec) {
+    mainClass = providers.gradleProperty('mainClass')
+        .orElse('org.example.App')
+}
