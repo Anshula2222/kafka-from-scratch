@@ -10,9 +10,16 @@ public class Consumer {
 
     public static void main(String[] args) throws IOException {
 
-        long offset = args.length > 0
-            ? Long.parseLong(args[0])
-            : 0;
+        if (args.length < 3) {
+            System.out.println(
+                "Usage: Consumer <topic> <partition> <offset>"
+            );
+            return;
+        }
+
+        String topic = args[0];
+        int partition = Integer.parseInt(args[1]);
+        long offset = Long.parseLong(args[2]);
 
         try (
             Socket socket = new Socket("localhost", 9092);
@@ -25,21 +32,19 @@ public class Consumer {
         ) {
 
             output.writeUTF("FETCH");
+            output.writeUTF(topic);
+            output.writeInt(partition);
             output.writeLong(offset);
             output.flush();
 
             String response = input.readUTF();
 
             if (response.equals("FOUND")) {
-                String message = input.readUTF();
-
                 System.out.println(
-                    "Offset " + offset + ": " + message
+                    "Message: " + input.readUTF()
                 );
             } else {
-                System.out.println(
-                    "Offset " + offset + ": " + response
-                );
+                System.out.println(response);
             }
         }
     }
