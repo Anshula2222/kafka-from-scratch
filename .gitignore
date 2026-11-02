@@ -8,3 +8,5 @@ build
 .kotlin
 /data
 app/data
+data-v2/
+app/data-v2/

@@ -1,7 +1,7 @@
 
 package org.example.broker;
 
-import org.example.storage.AppendOnlyLog;
+import org.example.storage.CrashSafeLog;
 import org.example.storage.LogManager;
 
 import java.io.DataInputStream;
@@ -70,7 +70,7 @@ public class BrokerServer {
                     int partition = input.readInt();
                     String message = input.readUTF();
 
-                    AppendOnlyLog log =
+                    CrashSafeLog log =
                         logManager.getLog(topic, partition);
 
                     long offset = log.append(message);
@@ -89,7 +89,7 @@ public class BrokerServer {
                     int partition = input.readInt();
                     long offset = input.readLong();
 
-                    AppendOnlyLog log =
+                    CrashSafeLog log =
                         logManager.getLog(topic, partition);
 
                     String message = log.read(offset);
@@ -119,7 +119,7 @@ public class BrokerServer {
                             messages.add(input.readUTF());
                         }
 
-                        AppendOnlyLog log =
+                        CrashSafeLog log =
                             logManager.getLog(topic, partition);
 
                         long firstOffset = log.appendBatch(messages);
@@ -148,7 +148,7 @@ public class BrokerServer {
                             break;
                         }
 
-                        AppendOnlyLog log =
+                        CrashSafeLog log =
                             logManager.getLog(topic, partition);
 
                         List<String> messages =

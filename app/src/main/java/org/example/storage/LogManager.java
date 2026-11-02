@@ -8,9 +8,9 @@ import java.util.Map;
 
 public class LogManager implements AutoCloseable {
 
-    private final Map<String, AppendOnlyLog> logs = new HashMap<>();
+    private final Map<String, CrashSafeLog> logs = new HashMap<>();
 
-    public synchronized AppendOnlyLog getLog(
+    public synchronized CrashSafeLog getLog(
             String topic, int partition) throws IOException {
 
         if (!topic.matches("[a-zA-Z0-9_-]+")) {
@@ -18,21 +18,18 @@ public class LogManager implements AutoCloseable {
         }
 
         if (partition < 0 || partition >= 2) {
-            throw new IllegalArgumentException(
-                "Partition must be 0 or 1"
-            );
+            throw new IllegalArgumentException("Partition must be 0 or 1");
         }
 
         String key = topic + "-" + partition;
 
         if (!logs.containsKey(key)) {
             Path path = Path.of(
-                "data", topic, "partition-" + partition + ".log"
+                "data-v2", topic, "partition-" + partition + ".log"
             );
 
-            logs.put(key, new AppendOnlyLog(path));
-
-            System.out.println("Opened log: " + path);
+            logs.put(key, new CrashSafeLog(path));
+            System.out.println("Opened crash-safe log: " + path);
         }
 
         return logs.get(key);
@@ -42,22 +39,16 @@ public class LogManager implements AutoCloseable {
     public synchronized void close() throws IOException {
         IOException failure = null;
 
-        for (AppendOnlyLog log : logs.values()) {
+        for (CrashSafeLog log : logs.values()) {
             try {
                 log.close();
             } catch (IOException e) {
-                if (failure == null) {
-                    failure = e;
-                } else {
-                    failure.addSuppressed(e);
-                }
+                if (failure == null) failure = e;
+                else failure.addSuppressed(e);
             }
         }
 
         logs.clear();
-
-        if (failure != null) {
-            throw failure;
-        }
+        if (failure != null) throw failure;
     }
 }
